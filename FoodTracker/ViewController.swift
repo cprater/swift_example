@@ -15,6 +15,7 @@ class ViewController: UIViewController, UITextFieldDelegate,
     @IBOutlet weak var nameTextField: UITextField!
     @IBOutlet weak var mealNameLabel: UILabel!
     @IBOutlet weak var photoImageView: UIImageView!
+    @IBOutlet weak var ratingControl: RatingControl!
     
     override func viewDidLoad() {
         super.viewDidLoad()
@@ -24,25 +25,25 @@ class ViewController: UIViewController, UITextFieldDelegate,
     }
     
     //MARK: UITextFieldDelegate
-    func textFieldShouldReturn(textField: UITextField) -> Bool {
+    func textFieldShouldReturn(_ textField: UITextField) -> Bool {
         // Hide the keyboard
         textField.resignFirstResponder()
         
         return true
     }
     
-    func textFieldDidEndEditing(textField: UITextField) {
+    func textFieldDidEndEditing(_ textField: UITextField) {
         mealNameLabel.text = textField.text
     }
     
     //MARK: UIImagePickerControllerDelegate
-    func imagePickerControllerDidCancel(picker: UIImagePickerController) {
+    func imagePickerControllerDidCancel(_ picker: UIImagePickerController) {
         // Dismiss the picker if the user canceled.
-        dismissViewControllerAnimated(true, completion: nil)
+        dismiss(animated: true, completion: nil)
     }
     
-    func imagePickerController(picker: UIImagePickerController,
-        didFinishPickingMediaWithInfo info: [String : AnyObject]) {
+    func imagePickerController(_ picker: UIImagePickerController,
+        didFinishPickingMediaWithInfo info: [String : Any]) {
         // The info dictionary may contain multiple representations of the image. You want to use the original.
         guard let selectedImage = info[UIImagePickerControllerOriginalImage] as?
             UIImage else {
@@ -50,11 +51,11 @@ class ViewController: UIViewController, UITextFieldDelegate,
         }
         
         photoImageView.image = selectedImage
-        dismissViewControllerAnimated(true, completion: nil)
+        dismiss(animated: true, completion: nil)
     }
     
     //MARK: Actions
-    @IBAction func selectImageFromPhotoLibrary(sender: UITapGestureRecognizer) {
+    @IBAction func selectImageFromPhotoLibrary(_ sender: UITapGestureRecognizer) {
         // hide keyboard
         nameTextField.resignFirstResponder()
     
@@ -62,15 +63,9 @@ class ViewController: UIViewController, UITextFieldDelegate,
         
         // only allow photos to be picked, not taken
         imageController.delegate = self
-        imageController.sourceType = .PhotoLibrary
+        imageController.sourceType = .photoLibrary
         
-        presentViewController(imageController, animated: true, completion: nil)
-    }
-    
-    @IBAction func setDefaultLabelText(sender: UIButton) {
-        nameTextField.resignFirstResponder()
-        
-        mealNameLabel.text = "Default Text"
+        present(imageController, animated: true, completion: nil)
     }
 }
 

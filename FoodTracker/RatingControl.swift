@@ -10,56 +10,127 @@ import UIKit
 
 @IBDesignable class RatingControl: UIStackView {
     //MARK: Properties
-    @IBInspectable var starSize: CGSize = CGSize(width: 44.0, height: 44.0)
-    @IBInspectable var starCount: Int = 5
+    @IBInspectable var starSize: CGSize = CGSize(width: 44.0, height: 44.0) {
+        didSet {
+            setupButtons()
+        }
+    }
     
-    private var ratingButtons = [UIButton]()
+    @IBInspectable var starCount: Int = 5 {
+        didSet {
+            setupButtons()
+        }
+    }
     
-    var rating = 0
+    fileprivate var ratingButtons = [UIButton]()
+    
+    var rating = 0 {
+        didSet {
+            updateButtonSelectionStates()
+        }
+    }
     
     
-    //MARK: Initialization
+    //MARK: Initialization    
+    required init(coder: NSCoder) {
+        super.init(coder: coder)
+        setupButtons()
+    }
+    
     override init(frame: CGRect) {
         super.init(frame: frame)
         setupButtons()
     }
     
-    override init(arrangedSubviews: [UIView]) {
-        super.init(arrangedSubviews: arrangedSubviews)
-        setupButtons()
-    }
-    
-    required init?(coder: NSCoder) {
-        super.init(coder: coder)
-        setupButtons()
-    }
-    
     //MARK: Button Action
-    func ratingButtonTapped(button: UIButton) {
-        print("Button pressed ")
+    func ratingButtonTapped(_ button: UIButton) {
+        guard let index = ratingButtons.index(of: button) else {
+           fatalError("The button, \(button), is not in the ratingButtons array: \(ratingButtons)")
+        }
+        
+        // Calculate the rating of the selected button
+        let selectedRating = index + 1
+        
+        if selectedRating == rating {
+            rating = 0
+        } else {
+            rating = selectedRating
+        }
     }
     
     //MARK: Private Methods
-    private func setupButtons() {
-        for _ in 0..<starCount {
+    fileprivate func setupButtons() {
+        // clear existing buttons
+        for button in ratingButtons {
+            removeArrangedSubview(button)
+            button.removeFromSuperview()
+        }
+        ratingButtons.removeAll()
+        
+        // Load Button Images
+        let bundle = Bundle(for: type(of: self))
+        let filledStar = UIImage(named: "filledStar", in: bundle, compatibleWith: self.traitCollection)
+        let emptyStar = UIImage(named: "emptyStar", in: bundle, compatibleWith: self.traitCollection)
+        let highlightedStar = UIImage(named: "highlightedStar", in: bundle, compatibleWith: self.traitCollection)
+        
+        for index in 0..<starCount {
             // Create button
             let button = UIButton()
-            button.backgroundColor = UIColor.redColor()
+            
+            // Set the button images
+            button.setImage(emptyStar, for: .normal)
+            button.setImage(filledStar, for: .selected)
+            button.setImage(highlightedStar, for: .highlighted)
+            button.setImage(highlightedStar, for: [.highlighted, .selected])
             
             // Add constraints
             button.translatesAutoresizingMaskIntoConstraints = false
-            button.heightAnchor.constraintEqualToConstant(starSize.height).active = true
-            button.widthAnchor.constraintEqualToConstant(starSize.width).active = true
+            button.heightAnchor.constraint(equalToConstant: starSize.height).isActive = true
+            button.widthAnchor.constraint(equalToConstant: starSize.width).isActive = true
+            
+            // Set accessibility label
+            button.accessibilityLabel = "Set \(index + 1) star rating"
             
             // Setup button action
             button.addTarget(self,
-                             action: #selector(RatingControl.ratingButtonTapped(_:)), forControlEvents: .TouchUpInside)
+                             action: #selector(RatingControl.ratingButtonTapped(_:)), for: .touchUpInside)
             
             // Add button to stack
             addArrangedSubview(button)
             
             // Add button to array
             ratingButtons.append(button)
+        }
+        
+        updateButtonSelectionStates()
+    }
+    
+    private func updateButtonSelectionStates() {
+        for (index, button) in ratingButtons.enumerated() {
+            button.isSelected = index < rating
+            
+            // Set hint string for selected star
+            let hintString: String?
+            if rating == index + 1 {
+                hintString = "Tap to reset the rating to zero."
+            } else {
+                hintString = nil
+            }
+            
+            // Calculate value string
+            let valueString: String
+            switch (rating) {
+            case 0:
+                valueString = "No rating set."
+            case 1:
+                valueString = "1 star set."
+            default:
+                valueString = "\(rating) stars set."
+            }
+            
+            // Assign hint and value string
+            button.accessibilityHint = hintString
+            button.accessibilityValue = valueString
         }
     }
 }
