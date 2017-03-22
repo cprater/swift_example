@@ -16,11 +16,14 @@ class MealTableViewController: UITableViewController {
     override func viewDidLoad() {
         super.viewDidLoad()
         
-        // Load the sample data
-        loadSampleMeals()
-
         // Use edit button item
         navigationItem.leftBarButtonItem = editButtonItem
+        
+        if let savedMeals = loadMeals() {
+            meals += savedMeals
+        } else {
+            loadSampleMeals()
+        }
     }
 
     override func didReceiveMemoryWarning() {
@@ -69,10 +72,15 @@ class MealTableViewController: UITableViewController {
         if editingStyle == .delete {
             // Delete the row from the data source
             meals.remove(at: indexPath.row)
+            
+            // Save the meals
+            saveMeals()
+            
             tableView.deleteRows(at: [indexPath], with: .fade)
+            
         } else if editingStyle == .insert {
             // Create a new instance of the appropriate class, insert it into the array, and add a new row to the table view
-        }    
+        }
     }
 
     /*
@@ -139,6 +147,9 @@ class MealTableViewController: UITableViewController {
                 meals.append(meal)
                 tableView.insertRows(at: [newIndexPath], with: .automatic)
             }
+            
+            // Save the meals
+            saveMeals()
         }
         
     }
@@ -162,5 +173,27 @@ class MealTableViewController: UITableViewController {
         }
         
         meals += [meal1, meal2, meal3]
+    }
+    
+    private func loadMeals() -> [Meal]? {
+        return NSKeyedUnarchiver.unarchiveObject(withFile: Meal.ArchiveURL.path) as? [Meal]
+    }
+    
+    private func saveMeals() {
+        let isSuccessfullSave = NSKeyedArchiver.archiveRootObject(meals, toFile: Meal.ArchiveURL.path)
+        
+        if isSuccessfullSave {
+            if #available(iOS 10.0, *) {
+                os_log("Meals successfully saved.", log: OSLog.default, type: .debug)
+            } else {
+                // Fallback on earlier versions
+            }
+        } else {
+            if #available(iOS 10.0, *) {
+                os_log("Failt to save meals...", log: OSLog.default, type: .error)
+            } else {
+                // Fallback on earlier versions
+            }
+        }
     }
 }
